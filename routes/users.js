@@ -4,6 +4,12 @@ const express = require("express");
 const uid2 = require("uid2");
 const router = express.Router();
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
+});
+
 // Import des models
 const User = require("../models/User");
 

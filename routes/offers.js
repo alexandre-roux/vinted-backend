@@ -4,9 +4,9 @@ const isAuthenticated = require("../isAuthenticated");
 const router = express.Router();
 
 cloudinary.config({
-  cloud_name: "dyj1ddjba",
-  api_key: "561367142321612",
-  api_secret: "o_JbfuCATWQNA2ca-Jw7XpTCX9E",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
 });
 
 // Import des models
