@@ -56,7 +56,7 @@ router.post("/user/signup", async (req, res) => {
           email: req.fields.email,
         });
         if (alreadyExistingUser) {
-          res.status(400).json({
+          res.status(409).json({
             error: {
               message:
                 "Invalid request: a user is already registered with this email",
