@@ -29,7 +29,7 @@ router.post("/user/login", async (req, res) => {
 
     const hash = SHA256(req.fields.password + user.salt);
     if (hash != user.hash) {
-      res.status(400).json({ error: { message: "Unauthorized" } });
+      res.status(401).json({ error: { message: "Unauthorized" } });
       return;
     }
 
