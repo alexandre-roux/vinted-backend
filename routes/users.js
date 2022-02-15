@@ -87,7 +87,7 @@ router.post("/user/signup", async (req, res) => {
       // Handle image
       if (req.files.picture) {
         const result = await cloudinary.uploader.upload(
-          req.files.picture.epath
+          req.files.picture.path
         );
         newUser.avatar = result;
       }
