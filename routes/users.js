@@ -70,6 +70,8 @@ router.post("/user/signup", async (req, res) => {
         token: newUser.token,
         account: {
           username: newUser.account.username,
+          phone: newUser.account.phone,
+          avatar: newUser.account.avatar,
         },
       });
     } else {
@@ -86,13 +88,13 @@ router.post("/user/login", async (req, res) => {
   console.log(req.fields);
   try {
     if (!req.fields.email || !req.fields.password) {
-      res.status(400).json({error: {message: "Invalid request"}});
+      res.status(400).json({error: {message: "Invalid request: missing email or password"}});
       return;
     }
 
     const user = await User.findOne({email: req.fields.email});
     if (!user) {
-      res.status(400).json({error: {message: "User unknown"}});
+      res.status(404).json({error: {message: "User unknown"}});
       return;
     }
 
