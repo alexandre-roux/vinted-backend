@@ -13,39 +13,6 @@ cloudinary.config({
 // Import des models
 const User = require("../models/User");
 
-router.post("/user/login", async (req, res) => {
-  console.log(req.fields);
-  try {
-    if (!req.fields.email || !req.fields.password) {
-      res.status(400).json({ error: { message: "Invalid request" } });
-      return;
-    }
-
-    const user = await User.findOne({ email: req.fields.email });
-    if (!user) {
-      res.status(400).json({ error: { message: "User unknown" } });
-      return;
-    }
-
-    const hash = SHA256(req.fields.password + user.salt);
-    if (hash != user.hash) {
-      res.status(401).json({ error: { message: "Unauthorized" } });
-      return;
-    }
-
-    res.status(200).json({
-      _id: user._id,
-      token: user.token,
-      account: {
-        username: user.account.username,
-        phone: user.account.phone,
-      },
-    });
-  } catch (error) {
-    res.status(400).json({ error: { message: error.message } });
-  }
-});
-
 router.post("/user/signup", async (req, res) => {
   console.log(req.fields);
   try {
@@ -59,7 +26,7 @@ router.post("/user/signup", async (req, res) => {
           res.status(409).json({
             error: {
               message:
-                "Invalid request: a user is already registered with this email",
+                  "Invalid request: a user is already registered with this email",
             },
           });
           return;
@@ -86,10 +53,14 @@ router.post("/user/signup", async (req, res) => {
 
       // Handle image
       if (req.files.picture) {
-        const result = await cloudinary.uploader.upload(
-          req.files.picture.path
-        );
-        newUser.avatar = result;
+        try {
+          const result = await cloudinary.uploader.upload(
+              req.files.picture.path
+          );
+          newUser.account.avatar = result;
+        } catch (error) {
+          console.error("Error uploading to Cloudinary:", error.message);
+        }
       }
 
       await newUser.save();
@@ -99,16 +70,48 @@ router.post("/user/signup", async (req, res) => {
         token: newUser.token,
         account: {
           username: newUser.account.username,
-          phone: newUser.account.phone,
         },
       });
     } else {
       res
-        .status(400)
-        .json({ error: { message: "Invalid request: username is mandatory" } });
+          .status(400)
+          .json({error: {message: "Invalid request: username is mandatory"}});
     }
   } catch (error) {
     res.status(400).json({ error: { message: error.message } });
+  }
+});
+
+router.post("/user/login", async (req, res) => {
+  console.log(req.fields);
+  try {
+    if (!req.fields.email || !req.fields.password) {
+      res.status(400).json({error: {message: "Invalid request"}});
+      return;
+    }
+
+    const user = await User.findOne({email: req.fields.email});
+    if (!user) {
+      res.status(400).json({error: {message: "User unknown"}});
+      return;
+    }
+
+    const hash = SHA256(req.fields.password + user.salt);
+    if (hash != user.hash) {
+      res.status(401).json({error: {message: "Unauthorized"}});
+      return;
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      token: user.token,
+      account: {
+        username: user.account.username,
+        phone: user.account.phone,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({error: {message: error.message}});
   }
 });
 
