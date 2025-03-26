@@ -17,7 +17,7 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
     console.log(req.fields);
     try {
         // Check fields
-        if (!req.fields.title) {
+        if (!req.fields.title || req.fields.title.length === 0) {
             res.status(400).json({error: {message: "Invalid request: title is mandatory"}});
             return;
         }
@@ -27,6 +27,18 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
         }
         if (req.fields.price <= 0) {
             res.status(400).json({error: {message: "Invalid request: price must be positive"}});
+            return;
+        }
+        if (req.fields.title.length > 50) {
+            res.status(400).json({error: {message: "Invalid request: title is too long"}});
+            return;
+        }
+        if (req.fields.price > 100000) {
+            res.status(400).json({error: {message: "Invalid request: price is too high"}});
+            return;
+        }
+        if (req.fields.description && req.fields.description.length > 500) {
+            res.status(400).json({error: {message: "Invalid request: description is too long"}});
             return;
         }
 
@@ -106,9 +118,23 @@ router.put("/offer/:offerId", isAuthenticated, async (req, res) => {
     try {
         let offerToEdit = await Offer.findById(req.params.offerId);
         if (!offerToEdit) {
-            res.status(400).json({message: "Wrong ID"});
+            res.status(404).json({message: "Wrong ID"});
             return;
         }
+
+        if (req.fields.title && req.fields.title.length > 50) {
+            res.status(400).json({error: {message: "Invalid request: title is too long"}});
+            return;
+        }
+        if (req.fields.price && req.fields.price > 100000) {
+            res.status(400).json({error: {message: "Invalid request: price is too high"}});
+            return;
+        }
+        if (req.fields.description && req.fields.description.length > 500) {
+            res.status(400).json({error: {message: "Invalid request: description is too long"}});
+            return;
+        }
+
         if (req.fields.title) offerToEdit.product_name = req.fields.title;
         if (req.fields.description)
             offerToEdit.product_description = req.fields.description;
