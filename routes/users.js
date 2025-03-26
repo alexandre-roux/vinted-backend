@@ -13,6 +13,8 @@ cloudinary.config({
 // Models import
 const User = require("../models/User");
 
+
+// Create user
 router.post("/user/signup", async (req, res) => {
     console.log(req.fields);
     try {
@@ -96,12 +98,17 @@ router.post("/user/signup", async (req, res) => {
     }
 });
 
+// Login
 router.post("/user/login", async (req, res) => {
     console.log(req.fields);
     try {
-        if (!req.fields.email || !req.fields.password) {
-            res.status(400).json({error: {message: "Invalid request: missing email or password"}});
+        if (!req.fields.username) {
+            res.status(400).json({error: {message: "Invalid request: username is mandatory"}});
             return;
+        }
+        if (!req.fields.password) {
+            res.status(400).json({error: {message: "Invalid request: password is mandatory"}});
+            return
         }
 
         const user = await User.findOne({email: req.fields.email});
@@ -111,7 +118,7 @@ router.post("/user/login", async (req, res) => {
         }
 
         const hash = SHA256(req.fields.password + user.salt);
-        if (hash != user.hash) {
+        if (hash !== user.hash) {
             res.status(401).json({error: {message: "Unauthorized"}});
             return;
         }
