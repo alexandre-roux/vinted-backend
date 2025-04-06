@@ -17,6 +17,7 @@
     "dotenv": "^14.2.0",
     "express": "^4.17.2",
     "express-formidable": "^1.2.0",
+    "joi": "^17.13.3",
     "mongoose": "^6.1.7",
     "stripe": "^8.202.0",
     "uid2": "^1.0.0"

@@ -1,5 +1,6 @@
-const cloudinary = require("cloudinary").v2;
+const cloudinary = require("cloudinary");
 const express = require("express");
+const Joi = require("joi");
 const isAuthenticated = require("../isAuthenticated");
 const router = express.Router();
 
@@ -15,31 +16,23 @@ const Offer = require("../models/Offer");
 // Create offer
 router.post("/offer/publish", isAuthenticated, async (req, res) => {
     console.log(req.fields);
+
+    const offerSchema = Joi.object({
+        title: Joi.string().max(50).required(),
+        description: Joi.string().max(500),
+        price: Joi.number().positive().max(100000).required(),
+        brand: Joi.string(),
+        size: Joi.string(),
+        condition: Joi.string(),
+        color: Joi.string(),
+        city: Joi.string(),
+    });
+
     try {
         // Check fields
-        if (!req.fields.title || req.fields.title.length === 0) {
-            res.status(400).json({error: {message: "Invalid request: title is mandatory"}});
-            return;
-        }
-        if (!req.fields.price) {
-            res.status(400).json({error: {message: "Invalid request: price is mandatory"}});
-            return;
-        }
-        if (req.fields.price <= 0) {
-            res.status(400).json({error: {message: "Invalid request: price must be positive"}});
-            return;
-        }
-        if (req.fields.title.length > 50) {
-            res.status(400).json({error: {message: "Invalid request: title is too long"}});
-            return;
-        }
-        if (req.fields.price > 100000) {
-            res.status(400).json({error: {message: "Invalid request: price is too high"}});
-            return;
-        }
-        if (req.fields.description && req.fields.description.length > 500) {
-            res.status(400).json({error: {message: "Invalid request: description is too long"}});
-            return;
+        const {error} = offerSchema.validate(req.fields);
+        if (error) {
+            return res.status(400).json({error: {message: error.details[0].message}});
         }
 
         const newOffer = new Offer({
@@ -75,17 +68,15 @@ router.get("/offers", async (req, res) => {
     console.log(req.query);
 
     try {
-        const title = req.query.title;
-        const priceMin = req.query.priceMin;
-        const priceMax = req.query.priceMax;
-        const sort = req.query.sort;
-        let page = req.query.page ? req.query.page : 1;
+        const {title, priceMin, priceMax, sort, page = 1} = req.query;
         let query = Offer.find().populate("owner");
+
         if (title) query.where({product_name: new RegExp(title, "i")});
         if (priceMin) query.where({product_price: {$gte: priceMin}});
         if (priceMax) query.where({product_price: {$lte: priceMax}});
         if (sort === "price-desc") query.sort({product_price: "desc"});
         if (sort === "price-asc") query.sort({product_price: "asc"});
+
         query.limit(5).skip(5 * (page - 1));
         const result = await query.exec();
         res.status(200).json(result);
@@ -103,6 +94,7 @@ router.delete("/offer/:offerId", isAuthenticated, async (req, res) => {
             res.status(400).json({message: "Wrong ID"});
             return;
         }
+
         await cloudinary.uploader.destroy(offerToDelete.product_image.public_id);
         await Offer.findByIdAndDelete(offerToDelete._id);
         res.status(200).json({message: "Offer deleted"});
@@ -113,7 +105,6 @@ router.delete("/offer/:offerId", isAuthenticated, async (req, res) => {
 
 router.put("/offer/:offerId", isAuthenticated, async (req, res) => {
     console.log(req.params);
-    console.log(req.fields);
 
     try {
         let offerToEdit = await Offer.findById(req.params.offerId);
@@ -122,23 +113,16 @@ router.put("/offer/:offerId", isAuthenticated, async (req, res) => {
             return;
         }
 
-        if (req.fields.title && req.fields.title.length > 50) {
-            res.status(400).json({error: {message: "Invalid request: title is too long"}});
-            return;
-        }
-        if (req.fields.price && req.fields.price > 100000) {
-            res.status(400).json({error: {message: "Invalid request: price is too high"}});
-            return;
-        }
-        if (req.fields.description && req.fields.description.length > 500) {
-            res.status(400).json({error: {message: "Invalid request: description is too long"}});
-            return;
+        const {error} = offerUpdateSchema.validate(req.fields);
+        if (error) {
+            return res.status(400).json({error: {message: error.details[0].message}});
         }
 
         if (req.fields.title) offerToEdit.product_name = req.fields.title;
         if (req.fields.description)
             offerToEdit.product_description = req.fields.description;
         if (req.fields.price) offerToEdit.product_price = req.fields.price;
+
         offerToEdit.product_details.forEach((detail) => {
             const key = Object.keys(detail);
             if (req.fields[key]) detail[key] = req.fields[key];
