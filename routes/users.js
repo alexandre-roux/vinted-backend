@@ -1,36 +1,34 @@
-const cloudinary = require("cloudinary").v2;
-const {SHA256} = require("crypto-js");
 const express = require("express");
+const {SHA256} = require("crypto-js");
 const uid2 = require("uid2");
-const Joi = require("joi");
+const cloudinary = require("cloudinary").v2;
 
 const router = express.Router();
 const User = require("../models/User");
 const {signupSchema, loginSchema} = require("../validators/users");
 
+// Cloudinary config
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_SECRET,
 });
 
-// Signup
+// Signup route
 router.post("/user/signup", async (req, res) => {
-    // Validate input
     const {error, value} = signupSchema.validate(req.fields);
     if (error) {
         return res.status(400).json({error: {message: error.details[0].message}});
     }
 
-    try {
-        const {email, username, password, phone} = value;
+    const {email, username, password, phone} = value;
 
-        // Check for existing user
+    try {
         const existingUser = await User.findOne({email});
         if (existingUser) {
             return res.status(409).json({
                 error: {
-                    message: "Invalid request: a user is already registered with this email",
+                    message: "A user is already registered with this email.",
                 },
             });
         }
@@ -41,21 +39,18 @@ router.post("/user/signup", async (req, res) => {
 
         const newUser = new User({
             email,
-            account: {
-                username,
-                phone,
-            },
+            account: {username, phone},
             token,
             hash,
             salt,
         });
 
-        // Handle image
-        if (req.files?.picture) {
+        // Optional avatar upload
+        if (req.files?.picture?.path) {
             try {
                 newUser.account.avatar = await cloudinary.uploader.upload(req.files.picture.path);
-            } catch (error) {
-                console.error("Error uploading to Cloudinary:", error.message);
+            } catch (uploadError) {
+                console.error("Cloudinary upload failed:", uploadError.message);
             }
         }
 
@@ -70,30 +65,29 @@ router.post("/user/signup", async (req, res) => {
                 avatar: newUser.account.avatar,
             },
         });
-    } catch (error) {
-        res.status(400).json({error: {message: error.message}});
+    } catch (err) {
+        res.status(500).json({error: {message: err.message}});
     }
 });
 
-// Login
+// Login route
 router.post("/user/login", async (req, res) => {
     const {error, value} = loginSchema.validate(req.fields);
-    // Validate input
     if (error) {
         return res.status(400).json({error: {message: error.details[0].message}});
     }
 
-    try {
-        const {username, password} = value;
+    const {username, password} = value;
 
+    try {
         const user = await User.findOne({"account.username": username});
         if (!user) {
-            return res.status(404).json({error: {message: "User unknown"}});
+            return res.status(404).json({error: {message: "User not found."}});
         }
 
         const hash = SHA256(password + user.salt).toString();
         if (hash !== user.hash) {
-            return res.status(401).json({error: {message: "Unauthorized"}});
+            return res.status(401).json({error: {message: "Unauthorized: invalid password."}});
         }
 
         res.status(200).json({
@@ -104,8 +98,8 @@ router.post("/user/login", async (req, res) => {
                 phone: user.account.phone,
             },
         });
-    } catch (error) {
-        res.status(400).json({error: {message: error.message}});
+    } catch (err) {
+        res.status(500).json({error: {message: err.message}});
     }
 });
 
