@@ -12,21 +12,11 @@ cloudinary.config({
 
 // Models import
 const Offer = require("../models/Offer");
+const {offerSchema, offerUpdateSchema} = require("../validators/offers");
 
 // Create offer
 router.post("/offer/publish", isAuthenticated, async (req, res) => {
     console.log(req.fields);
-
-    const offerSchema = Joi.object({
-        title: Joi.string().max(50).required(),
-        description: Joi.string().max(500),
-        price: Joi.number().positive().max(100000).required(),
-        brand: Joi.string(),
-        size: Joi.string(),
-        condition: Joi.string(),
-        color: Joi.string(),
-        city: Joi.string(),
-    });
 
     try {
         // Check fields
