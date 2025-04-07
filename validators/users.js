@@ -5,10 +5,13 @@ const signupSchema = Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
     phone: Joi.string().optional(),
+    picture: Joi.object({
+        path: Joi.string().required()
+    }).optional()
 });
 
 const loginSchema = Joi.object({
-    username: Joi.string().required(),
+    email: Joi.string().email().required(),
     password: Joi.string().required(),
 });
 
