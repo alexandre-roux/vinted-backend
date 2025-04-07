@@ -1,6 +1,6 @@
+// noinspection JSUnresolvedReference
 const cloudinary = require("cloudinary").v2;
 const express = require("express");
-const Joi = require("joi");
 const isAuthenticated = require("../isAuthenticated");
 const router = express.Router();
 
@@ -36,11 +36,10 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
         });
 
         if (req.files?.picture?.path) {
-            const uploadResult = await cloudinary.uploader.upload(req.files.picture.path, {
+            newOffer.product_image = await cloudinary.uploader.upload(req.files.picture.path, {
                 public_id: newOffer._id,
                 folder: "/vinted/offers/",
             });
-            newOffer.product_image = uploadResult;
         }
 
         await newOffer.save();
@@ -74,6 +73,10 @@ router.get("/offers", async (req, res) => {
 
 // Get Offer by ID
 router.get("/offer/:offerId", async (req, res) => {
+    if (!req.params.offerId) {
+        res.status(400).json({error: {message: "Missing offer ID"}});
+    }
+
     try {
         const offer = await Offer.findById(req.params.offerId).populate("owner");
         if (!offer) return res.status(404).json({message: "Offer not found"});
@@ -86,6 +89,10 @@ router.get("/offer/:offerId", async (req, res) => {
 
 // Delete Offer
 router.delete("/offer/:offerId", isAuthenticated, async (req, res) => {
+    if (!req.params.offerId) {
+        res.status(400).json({error: {message: "Missing offer ID"}});
+    }
+
     try {
         const offer = await Offer.findById(req.params.offerId);
         if (!offer) return res.status(404).json({message: "Offer not found"});
@@ -124,11 +131,10 @@ router.put("/offer/:offerId", isAuthenticated, async (req, res) => {
         });
 
         if (req.files?.picture?.path) {
-            const result = await cloudinary.uploader.upload(req.files.picture.path, {
+            offer.product_image = await cloudinary.uploader.upload(req.files.picture.path, {
                 public_id: offer._id,
                 folder: "/vinted/offers/",
             });
-            offer.product_image = result;
         }
 
         await offer.save();
