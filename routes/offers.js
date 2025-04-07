@@ -15,12 +15,12 @@ cloudinary.config({
 
 // Create Offer
 router.post("/offer/publish", isAuthenticated, async (req, res) => {
-    try {
-        const {error} = offerSchema.validate(req.fields);
-        if (error) {
-            return res.status(400).json({error: {message: error.details[0].message}});
-        }
+    const {error} = offerSchema.validate(req.fields);
+    if (error) {
+        return res.status(400).json({error: {message: error.details[0].message}});
+    }
 
+    try {
         const newOffer = new Offer({
             product_name: req.fields.title,
             product_description: req.fields.description,
@@ -103,14 +103,14 @@ router.delete("/offer/:offerId", isAuthenticated, async (req, res) => {
 
 // Update Offer
 router.put("/offer/:offerId", isAuthenticated, async (req, res) => {
+    const {error} = offerUpdateSchema.validate(req.fields);
+    if (error) {
+        return res.status(400).json({error: {message: error.details[0].message}});
+    }
+
     try {
         const offer = await Offer.findById(req.params.offerId);
         if (!offer) return res.status(404).json({message: "Offer not found"});
-
-        const {error} = offerUpdateSchema.validate(req.fields);
-        if (error) {
-            return res.status(400).json({error: {message: error.details[0].message}});
-        }
 
         if (req.fields.title) offer.product_name = req.fields.title;
         if (req.fields.description) offer.product_description = req.fields.description;
