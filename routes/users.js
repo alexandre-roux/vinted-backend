@@ -2,7 +2,11 @@ const cloudinary = require("cloudinary").v2;
 const {SHA256} = require("crypto-js");
 const express = require("express");
 const uid2 = require("uid2");
+const Joi = require("joi");
+
 const router = express.Router();
+const User = require("../models/User");
+const {signupSchema, loginSchema} = require("../validators/users");
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -10,71 +14,46 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET,
 });
 
-// Models import
-const User = require("../models/User");
-
-
-// Create user
+// Signup
 router.post("/user/signup", async (req, res) => {
-    console.log(req.fields);
-    try {
-        // Check fields
-        if (!req.fields.email) {
-            res.status(400).json({error: {message: "Invalid request: email is mandatory"}});
-            return;
-        }
-        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-        if (!emailRegex.test(req.fields.email)) {
-            res.status(400).json({error: {message: "Invalid request: email is not valid"}});
-            return;
-        }
-        if (!req.fields.username) {
-            res.status(400).json({error: {message: "Invalid request: username is mandatory"}});
-            return;
-        }
-        if (!req.fields.password) {
-            res.status(400).json({error: {message: "Invalid request: password is mandatory"}});
-            return
-        }
+    // Validate input
+    const {error, value} = signupSchema.validate(req.fields);
+    if (error) {
+        return res.status(400).json({error: {message: error.details[0].message}});
+    }
 
-        // Check if email hasn't already been used
-        if (req.fields.email) {
-            const alreadyExistingUser = await User.findOne({
-                email: req.fields.email,
+    try {
+        const {email, username, password, phone} = value;
+
+        // Check for existing user
+        const existingUser = await User.findOne({email});
+        if (existingUser) {
+            return res.status(409).json({
+                error: {
+                    message: "Invalid request: a user is already registered with this email",
+                },
             });
-            if (alreadyExistingUser) {
-                res.status(409).json({
-                    error: {
-                        message:
-                            "Invalid request: a user is already registered with this email",
-                    },
-                });
-                return;
-            }
         }
 
         const salt = uid2(16);
-        const hash = SHA256(req.fields.password + salt).toString();
+        const hash = SHA256(password + salt).toString();
         const token = uid2(16);
 
-        // Create user
         const newUser = new User({
-            email: req.fields.email,
+            email,
             account: {
-                username: req.fields.username,
-                phone: req.fields.phone,
+                username,
+                phone,
             },
-            token: token,
-            hash: hash,
-            salt: salt,
+            token,
+            hash,
+            salt,
         });
 
         // Handle image
-        if (req.files.picture) {
+        if (req.files?.picture) {
             try {
-                newUser.account.avatar = await cloudinary.uploader.upload(
-                    req.files.picture.path
-                );
+                newUser.account.avatar = await cloudinary.uploader.upload(req.files.picture.path);
             } catch (error) {
                 console.error("Error uploading to Cloudinary:", error.message);
             }
@@ -98,27 +77,23 @@ router.post("/user/signup", async (req, res) => {
 
 // Login
 router.post("/user/login", async (req, res) => {
-    console.log(req.fields);
+    const {error, value} = loginSchema.validate(req.fields);
+    // Validate input
+    if (error) {
+        return res.status(400).json({error: {message: error.details[0].message}});
+    }
+
     try {
-        if (!req.fields.username) {
-            res.status(400).json({error: {message: "Invalid request: username is mandatory"}});
-            return;
-        }
-        if (!req.fields.password) {
-            res.status(400).json({error: {message: "Invalid request: password is mandatory"}});
-            return
-        }
+        const {username, password} = value;
 
-        const user = await User.findOne({username: req.fields.username});
+        const user = await User.findOne({"account.username": username});
         if (!user) {
-            res.status(404).json({error: {message: "User unknown"}});
-            return;
+            return res.status(404).json({error: {message: "User unknown"}});
         }
 
-        const hash = SHA256(req.fields.password + user.salt).toString();
+        const hash = SHA256(password + user.salt).toString();
         if (hash !== user.hash) {
-            res.status(401).json({error: {message: "Unauthorized"}});
-            return;
+            return res.status(401).json({error: {message: "Unauthorized"}});
         }
 
         res.status(200).json({
