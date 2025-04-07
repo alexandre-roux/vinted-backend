@@ -5,7 +5,7 @@ const isAuthenticated = require("../isAuthenticated");
 const router = express.Router();
 
 const Offer = require("../models/Offer");
-const {offerSchema, offerUpdateSchema} = require("../validators/offers");
+const {offerCreateSchema, offerGetSchema, offerUpdateSchema} = require("../validators/offers");
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -15,7 +15,7 @@ cloudinary.config({
 
 // Create Offer
 router.post("/offer/publish", isAuthenticated, async (req, res) => {
-    const {error} = offerSchema.validate(req.fields);
+    const {error} = offerCreateSchema.validate(req.fields);
     if (error) {
         return res.status(400).json({error: {message: error.details[0].message}});
     }
@@ -51,6 +51,11 @@ router.post("/offer/publish", isAuthenticated, async (req, res) => {
 
 // Get Offers
 router.get("/offers", async (req, res) => {
+    const {error} = offerGetSchema.validate(req.fields);
+    if (error) {
+        return res.status(400).json({error: {message: error.details[0].message}});
+    }
+
     try {
         const {title, priceMin, priceMax, sort, page = 1} = req.query;
         const query = Offer.find().populate("owner");
@@ -110,6 +115,9 @@ router.delete("/offer/:offerId", isAuthenticated, async (req, res) => {
 
 // Update Offer
 router.put("/offer/:offerId", isAuthenticated, async (req, res) => {
+    if (!req.params.offerId) {
+        res.status(400).json({error: {message: "Missing offer ID"}});
+    }
     const {error} = offerUpdateSchema.validate(req.fields);
     if (error) {
         return res.status(400).json({error: {message: error.details[0].message}});
