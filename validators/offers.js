@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-const offerSchema = Joi.object({
+const offerCreateSchema = Joi.object({
     title: Joi.string().max(50).required(),
     description: Joi.string().max(500),
     price: Joi.number().positive().max(100000).required(),
@@ -9,6 +9,14 @@ const offerSchema = Joi.object({
     condition: Joi.string(),
     color: Joi.string(),
     city: Joi.string(),
+});
+
+const offerGetSchema = Joi.object({
+    title: Joi.string().max(50),
+    priceMin: Joi.number().positive(),
+    priceMax: Joi.number().positive(),
+    sort: Joi.string().valid("price-desc", "price-asc"),
+    page: Joi.number().integer().positive(),
 });
 
 const offerUpdateSchema = Joi.object({
@@ -23,6 +31,7 @@ const offerUpdateSchema = Joi.object({
 }).min(1);
 
 module.exports = {
-    offerSchema,
+    offerCreateSchema,
+    offerGetSchema,
     offerUpdateSchema,
 };
