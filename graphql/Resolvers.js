@@ -10,15 +10,13 @@ const resolvers = {
             throw new Error(error.details[0].message);
         }
 
-        const {email: validatedEmail, password: validatedPassword} = value;
-
         try {
-            const user = await User.findOne({email: validatedEmail});
+            const user = await User.findOne({email: email});
             if (!user) {
                 throw new Error("User not found.");
             }
 
-            const hash = SHA256(validatedPassword + user.salt).toString();
+            const hash = SHA256(password + user.salt).toString();
             if (hash !== user.hash) {
                 throw new Error("Unauthorized: invalid password.");
             }

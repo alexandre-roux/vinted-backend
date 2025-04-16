@@ -13,7 +13,7 @@ mongoose.connection.once("open", () => {
 });
 
 app.use(
-    "/",
+    "/graphql",
     createHandler({
         schema,
         rootValue: resolvers,
