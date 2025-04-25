@@ -4,6 +4,13 @@ const {loginSchema, signupSchema} = require("../validators/users");
 const uid2 = require("uid2");
 const {v2: cloudinary} = require("cloudinary");
 
+// Cloudinary config
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET,
+});
+
 const resolvers = {
     login: async ({email, password}) => {
         const {error} = loginSchema.validate({email, password});
@@ -28,8 +35,8 @@ const resolvers = {
         }
     },
 
-    signup: async ({email, username, password, phone}) => {
-        const {error} = signupSchema.validate({email, username, password, phone});
+    signup: async ({email, username, password, phone, avatar}) => {
+        const {error} = signupSchema.validate({email, username, password, phone, avatar});
         if (error) {
             throw new Error(error.details[0].message);
         }
@@ -51,6 +58,15 @@ const resolvers = {
                 hash,
                 salt,
             });
+
+            // Optional avatar upload
+            if (avatar) {
+                try {
+                    newUser.account.avatar = await cloudinary.uploader.upload(avatar);
+                } catch (uploadError) {
+                    throw new Error("Cloudinary upload failed: " + uploadError.error);
+                }
+            }
 
             await newUser.save();
 

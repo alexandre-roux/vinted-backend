@@ -24,7 +24,7 @@ const schema = buildSchema(`
     }
     
     type Mutation {
-        signup(email: String!, username: String!, password: String!, phone: String): User
+        signup(email: String!, username: String!, password: String!, phone: String, avatar: String): User
     }
 `);
 

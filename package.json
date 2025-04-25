@@ -1,28 +1,28 @@
 {
-  "name": "vinted",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "cloudinary": "^2.6.0",
-    "crypto-js": "^4.1.1",
-    "dotenv": "^14.2.0",
-    "express": "^4.21.2",
-    "graphql": "^15.10.1",
-    "graphql-http": "^1.22.4",
-    "joi": "^17.13.3",
-    "mongoose": "^6.13.8",
-    "stripe": "^8.202.0",
-    "uid2": "^1.0.0"
-  },
-  "devDependencies": {
-    "prettier": "2.5.1"
-  }
+    "name": "vinted",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node index.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "cloudinary": "^2.6.0",
+        "crypto-js": "^4.1.1",
+        "dotenv": "^14.2.0",
+        "express": "^4.21.2",
+        "graphql": "^15.10.1",
+        "graphql-http": "^1.22.4",
+        "joi": "^17.13.3",
+        "mongoose": "^6.13.8",
+        "stripe": "^8.202.0",
+        "uid2": "^1.0.0"
+    },
+    "devDependencies": {
+        "prettier": "2.5.1"
+    }
 }
