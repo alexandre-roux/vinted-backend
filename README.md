@@ -13,7 +13,7 @@ offer creation, editing, deletion, and retrieval, as well as payment processing.
 - Image Upload using Cloudinary
 - User Authentication Middleware
 - Payment Processing with Stripe
-- Dual API Support: REST and GraphQL
+- GraphQL API
 
 ## Technologies Used
 
@@ -60,54 +60,11 @@ offer creation, editing, deletion, and retrieval, as well as payment processing.
     http://localhost:3000/graphql
     ```
 
-## API Endpoints
-
-This project provides both REST and GraphQL APIs for accessing the same functionality.
-
-### REST API
-
-#### User Routes
-
-- **POST** `/user/signup`
-    - Create a new user account.
-    - Request body should include `email`, `username`, `password`, and optionally `phone` and `picture`.
-
-- **POST** `/user/login`
-    - Login with an existing user account.
-    - Request body should include `email` and `password`.
-
-#### Offer Routes
-
-- **GET** `/offers`
-    - Retrieve a list of offers with optional query parameters for filtering and sorting.
-    - Query parameters: `title`, `priceMin`, `priceMax`, `sort`, `page`.
-
-- **GET** `/offer/:offerId`
-    - Retrieve a specific offer by its ID.
-
-- **POST** `/offer/publish`
-    - Create a new offer (requires authentication).
-    - Request body should include `title`, `description`, `price`, `brand`, `size`, `condition`, `color`, `city`, and
-      optionally `picture`.
-
-- **PUT** `/offer/:offerId`
-    - Edit an existing offer by its ID (requires authentication).
-    - Request body can include `title`, `description`, `price`, and optionally `picture`.
-
-- **DELETE** `/offer/:offerId`
-    - Delete an offer by its ID (requires authentication).
-
-#### Payment Routes
-
-- **POST** `/payment`
-    - Process a payment for an offer using Stripe.
-    - Request body should include `amount`, `currency`, and `token`.
-
-### GraphQL API
+## GraphQL API
 
 The GraphQL API is available at `/graphql` endpoint. You can use GraphiQL to explore and test the API.
 
-#### Queries
+### Queries
 
 - **login(email: String!, password: String!): Account**
     - Authenticate a user and return their account information.
@@ -118,7 +75,7 @@ The GraphQL API is available at `/graphql` endpoint. You can use GraphiQL to exp
 - **offer(id: String!): Offer**
     - Retrieve a specific offer by its ID.
 
-#### Mutations
+### Mutations
 
 - **signup(email: String!, username: String!, password: String!, phone: String, avatar: String): User**
     - Create a new user account.
@@ -134,9 +91,9 @@ The GraphQL API is available at `/graphql` endpoint. You can use GraphiQL to exp
 - **deleteOffer(id: String!): String**
     - Delete an offer (requires authentication).
 
-## Middleware
+## Authentication
 
-- `isAuthenticated`: Middleware to check if the user is authenticated before allowing access to certain routes.
+- `isAuthenticated`: Middleware to check if the user is authenticated before allowing access to protected operations.
 
 ## Models
 
