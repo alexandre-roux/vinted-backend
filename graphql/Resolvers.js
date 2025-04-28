@@ -140,35 +140,46 @@ const resolvers = {
     },
 
     // Offer mutations
-    createOffer: async ({offer}, context) => {
+    createOffer: async ({title, description, price, brand, size, condition, color, city, picture}, context) => {
         try {
             // Authenticate user
             const user = await authenticate(context);
 
             // Validate input
-            const {error} = offerCreateSchema.validate(offer);
+            const offerData = {
+                title,
+                description,
+                price,
+                brand,
+                size,
+                condition,
+                color,
+                city
+            };
+
+            const {error} = offerCreateSchema.validate(offerData);
             if (error) {
                 throw new Error(error.details[0].message);
             }
 
             // Create new offer
             const newOffer = new Offer({
-                product_name: offer.title,
-                product_description: offer.description,
-                product_price: offer.price,
+                product_name: title,
+                product_description: description,
+                product_price: price,
                 product_details: [
-                    {brand: offer.brand},
-                    {size: offer.size},
-                    {condition: offer.condition},
-                    {color: offer.color},
-                    {city: offer.city},
+                    {brand: brand || ""},
+                    {size: size || ""},
+                    {condition: condition || ""},
+                    {color: color || ""},
+                    {city: city || ""},
                 ],
                 owner: user,
             });
 
             // Upload picture if provided
-            if (offer.picture) {
-                newOffer.product_image = await cloudinary.uploader.upload(offer.picture, {
+            if (picture) {
+                newOffer.product_image = await cloudinary.uploader.upload(picture, {
                     public_id: newOffer._id,
                     folder: "/vinted/offers/",
                 });
@@ -181,7 +192,7 @@ const resolvers = {
         }
     },
 
-    updateOffer: async ({id, offer}, context) => {
+    updateOffer: async ({id, title, description, price, brand, size, condition, color, city, picture}, context) => {
         try {
             // Authenticate user
             const user = await authenticate(context);
@@ -190,7 +201,24 @@ const resolvers = {
             if (!id) {
                 throw new Error("Missing offer ID");
             }
-            const {error} = offerUpdateSchema.validate(offer);
+
+            const updateData = {
+                title,
+                description,
+                price,
+                brand,
+                size,
+                condition,
+                color,
+                city
+            };
+
+            // Remove undefined fields
+            Object.keys(updateData).forEach(key =>
+                updateData[key] === undefined && delete updateData[key]
+            );
+
+            const {error} = offerUpdateSchema.validate(updateData);
             if (error) {
                 throw new Error(error.details[0].message);
             }
@@ -202,20 +230,34 @@ const resolvers = {
             }
 
             // Update offer fields
-            if (offer.title) existingOffer.product_name = offer.title;
-            if (offer.description) existingOffer.product_description = offer.description;
-            if (offer.price) existingOffer.product_price = offer.price;
+            if (title) existingOffer.product_name = title;
+            if (description) existingOffer.product_description = description;
+            if (price) existingOffer.product_price = price;
 
-            existingOffer.product_details.forEach((detail) => {
-                const key = Object.keys(detail)[0];
-                if (offer[key]) {
-                    detail[key] = offer[key];
-                }
-            });
+            // Update product details
+            if (existingOffer.product_details && existingOffer.product_details.length > 0) {
+                existingOffer.product_details.forEach((detail) => {
+                    const key = Object.keys(detail)[0];
+                    if (key === 'brand' && brand !== undefined) detail.brand = brand;
+                    if (key === 'size' && size !== undefined) detail.size = size;
+                    if (key === 'condition' && condition !== undefined) detail.condition = condition;
+                    if (key === 'color' && color !== undefined) detail.color = color;
+                    if (key === 'city' && city !== undefined) detail.city = city;
+                });
+            } else {
+                // Create product details if they don't exist
+                existingOffer.product_details = [
+                    {brand: brand || ""},
+                    {size: size || ""},
+                    {condition: condition || ""},
+                    {color: color || ""},
+                    {city: city || ""}
+                ];
+            }
 
             // Upload new picture if provided
-            if (offer.picture) {
-                existingOffer.product_image = await cloudinary.uploader.upload(offer.picture, {
+            if (picture) {
+                existingOffer.product_image = await cloudinary.uploader.upload(picture, {
                     public_id: existingOffer._id,
                     folder: "/vinted/offers/",
                 });
