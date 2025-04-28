@@ -17,6 +17,7 @@ app.use(
     createHandler({
         schema,
         rootValue: resolvers,
+        context: (req) => ({req}),
         graphiql: true,
     })
 );
