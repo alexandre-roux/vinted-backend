@@ -4,7 +4,7 @@ This project is a backend API for a Vinted-like marketplace that allows users to
 for buying, selling, and exchanging clothes. It includes functionalities for user authentication,
 offer creation, editing, deletion, and retrieval, as well as payment processing.
 
-👉 A live demo is available here: https://vinted-backend-qe6e.onrender.com/graphql
+👉 The GraphQL API is available here: https://vinted-backend-qe6e.onrender.com/graphql
 
 ## Features
 
