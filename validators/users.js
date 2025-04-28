@@ -5,9 +5,7 @@ const signupSchema = Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
     phone: Joi.string().optional(),
-    picture: Joi.object({
-        path: Joi.string().required()
-    }).optional()
+    avatar: Joi.string().pattern(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i).optional()
 });
 
 const loginSchema = Joi.object({
